@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="shell" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#F8F1E7"/>
+      <stop offset=".38" stop-color="#D9D2CC"/>
+      <stop offset=".89" stop-color="#A9A8AF"/>
+      <stop offset="1" stop-color="#E5D5CE"/>
+    </linearGradient>
+    <linearGradient id="caseEdge" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#767782"/>
+      <stop offset=".65" stop-color="#4B4A57"/>
+      <stop offset="1" stop-color="#292933"/>
+    </linearGradient>
+    <linearGradient id="rim" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#78777D"/>
+      <stop offset=".48" stop-color="#9D98A0"/>
+      <stop offset="1" stop-color="#FAEAE0"/>
+    </linearGradient>
+    <linearGradient id="recess" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#14151E"/>
+      <stop offset="1" stop-color="#424454"/>
+    </linearGradient>
+    <linearGradient id="key" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#FFF0D9"/>
+      <stop offset=".07" stop-color="#FAD6AA"/>
+      <stop offset=".24" stop-color="#FFB77B"/>
+      <stop offset=".76" stop-color="#F17B4B"/>
+      <stop offset="1" stop-color="#D94F2D"/>
+    </linearGradient>
+    <linearGradient id="keyEdge" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#933722"/>
+      <stop offset=".78" stop-color="#7B271B"/>
+      <stop offset="1" stop-color="#CB5634"/>
+    </linearGradient>
+    <linearGradient id="closedKey" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop stop-color="#646773"/>
+      <stop offset=".52" stop-color="#4A4C5A"/>
+      <stop offset="1" stop-color="#323440"/>
+    </linearGradient>
+  </defs>
+  <g transform="rotate(-11 512 523)">
+    <!-- The machined rail and the dark pocket running through it. -->
+    <rect x="132" y="394" width="760" height="278" rx="92" fill="#080913" opacity=".38"/>
+    <rect x="142" y="375" width="740" height="276" rx="84" fill="url(#caseEdge)"/>
+    <rect x="148" y="379" width="728" height="252" rx="78" fill="#74727F" opacity=".55"/>
+    <rect x="142" y="349" width="740" height="265" rx="84" fill="url(#shell)" stroke="#FFF8E9" stroke-width="3"/>
+    <rect x="173" y="378" width="678" height="198" rx="58" fill="url(#rim)"/>
+    <rect x="182" y="387" width="660" height="180" rx="51" fill="url(#recess)"/>
+    <path d="M221 543h583" stroke="#9F9CAA" stroke-opacity=".22" stroke-width="3" stroke-linecap="round"/>
+    <path d="M207 629h47m515 0h47" stroke="#D4C9CB" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>
+    <!-- Two tiles stay recessed. A third lifts clear of the track. -->
+    <rect x="217" y="413" width="153" height="123" rx="29" fill="#11131C"/>
+    <rect x="219" y="410" width="149" height="115" rx="27" fill="url(#closedKey)" stroke="#777887" stroke-width="2"/>
+    <path d="M265 467h57" stroke="#B1B2BD" stroke-width="9" stroke-linecap="round"/>
+    <rect x="392" y="413" width="153" height="123" rx="29" fill="#11131C"/>
+    <rect x="394" y="410" width="149" height="115" rx="27" fill="url(#closedKey)" stroke="#777887" stroke-width="2"/>
+    <path d="M440 467h57" stroke="#B1B2BD" stroke-width="9" stroke-linecap="round"/>
+    <rect x="572" y="413" width="232" height="123" rx="31" fill="#161821" stroke="#777783" stroke-opacity=".6" stroke-width="2"/>
+    <path d="M601 514h173" stroke="#797786" stroke-width="3" stroke-linecap="round" opacity=".45"/>
+    <rect x="577" y="329" width="226" height="163" rx="44" fill="#070811" opacity=".55"/>
+    <rect x="572" y="302" width="226" height="161" rx="40" fill="url(#keyEdge)"/>
+    <rect x="572" y="273" width="226" height="163" rx="40" fill="url(#key)" stroke="#FFD7AE" stroke-width="2"/>
+    <path d="M653 362l32-27 32 27" fill="none" stroke="#993C29" stroke-width="13" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M653 359l32-27 32 27" fill="none" stroke="#FFE3BE" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

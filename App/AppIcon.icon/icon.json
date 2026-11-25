@@ -1,0 +1,62 @@
+{
+  "groups": [
+    {
+      "layers": [
+        {
+          "image-name": "foreground.svg",
+          "name": "glyph",
+          "glass": true,
+          "position": {
+            "scale": 1.06,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "name": "Foreground",
+      "specular": false,
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.28
+      },
+      "blur-material": null
+    }
+  ],
+  "supported-platforms": {
+    "squares": "shared",
+    "circles": [
+      "watchOS"
+    ]
+  },
+  "fill-specializations": [
+    {
+      "value": {
+        "solid": "srgb:0.23137,0.18824,0.29412,1.00000"
+      }
+    },
+    {
+      "appearance": "dark",
+      "value": {
+        "solid": "srgb:0.14118,0.10196,0.18824,1.00000"
+      }
+    }
+  ],
+  "fill": {
+    "linear-gradient": [
+      "srgb:0.12549,0.09804,0.18431,1.00000",
+      "srgb:0.34510,0.27843,0.41961,1.00000"
+    ],
+    "orientation": {
+      "start": {
+        "x": 0.21321178182447698,
+        "y": 0.909576022144496
+      },
+      "stop": {
+        "x": 0.786788218175523,
+        "y": 0.0904239778555041
+      }
+    }
+  }
+}
