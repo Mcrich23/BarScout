@@ -47,6 +47,7 @@ struct SetupView: View {
           .padding(.bottom, 6)
 
         ShortcutControl(shortcuts: shortcuts)
+        LoginItemCard()
         AccessibilityCard(hasAccess: hasAccess, requestAccess: requestAccess)
 
         Spacer(minLength: 0)
