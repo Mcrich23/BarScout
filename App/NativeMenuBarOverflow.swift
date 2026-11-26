@@ -1,3 +1,4 @@
+import AppKit
 import ApplicationServices
 import Carbon.HIToolbox
 import Foundation
@@ -42,7 +43,7 @@ struct NativeMenuBarOverflow {
     defer { if !pointerRestored { restorePointer() } }
 
     if let visible = slot(for: item) {
-      return openAndWait(visible, onPresentation: restorePointer)
+      return openAndWait(visible, restorePointer: restorePointer)
     }
 
     defer {
@@ -59,7 +60,7 @@ struct NativeMenuBarOverflow {
     guard let revealed = waitForRevealedSlot(item, scan: scan) else {
       return false
     }
-    return openAndWait(revealed, onPresentation: restorePointer)
+    return openAndWait(revealed, restorePointer: restorePointer)
   }
 
   private func waitForRevealedSlot(_ item: MenuBarItem, scan: () -> [MenuBarItem]) -> Slot? {
@@ -182,31 +183,45 @@ struct NativeMenuBarOverflow {
       && display.minY <= frame.midY && frame.midY < display.minY + 55
   }
 
-  private func openAndWait(_ slot: Slot, onPresentation: () -> Void) -> Bool {
-    let baseline = transientWindows(near: slot)
+  private func openAndWait(_ slot: Slot, restorePointer: () -> Void) -> Bool {
+    var owners: Set<pid_t> = [slot.item.pid, agentPID]
+    if slot.item.pid == agentPID,
+      let controlCenter = NSRunningApplication.runningApplications(withBundleIdentifier: "com.apple.controlcenter").first
+    {
+      owners.insert(controlCenter.processIdentifier)
+    }
+    let baseline = transientWindows(near: slot, ownedBy: owners)
     let menuWasVisible = hasOpenMenu(slot.item)
     guard slot.frame == self.slot(for: slot.item)?.frame, click(slot.frame.center) else { return false }
 
-    let start = Date()
-    var wasOpen = false
-    var lastOpen = start
+    let clock = ContinuousClock()
+    let start = clock.now
+    var lastOpen: ContinuousClock.Instant?
+    // Window Server can report the popover while the app's accessibility server is busy handling the click.
+    while true {
+      if !transientWindows(near: slot, ownedBy: owners).isSubset(of: baseline) {
+        lastOpen = clock.now
+        break
+      }
+      if start.duration(to: clock.now) >= .milliseconds(150) { break }
+      Thread.sleep(forTimeInterval: 0.015)
+    }
+    restorePointer()
+
     while true {
       Thread.sleep(forTimeInterval: 0.09)
-      let now = Date()
-      let windows = transientWindows(near: slot).subtracting(baseline)
-      let open = !windows.isEmpty || (!menuWasVisible && hasOpenMenu(slot.item))
+      let open = !transientWindows(near: slot, ownedBy: owners).isSubset(of: baseline)
+        || (!menuWasVisible && hasOpenMenu(slot.item))
+      let now = clock.now
       if open {
-        if !wasOpen {
-          onPresentation()
-        }
-        wasOpen = true
         lastOpen = now
-      } else if wasOpen {
-        if now.timeIntervalSince(lastOpen) > 0.24 { break }
-      } else if now.timeIntervalSince(start) > 0.75 {
-        let pointer = CGEvent(source: nil)?.location ?? .zero
+      } else if let lastOpen {
+        if lastOpen.duration(to: now) > .milliseconds(240) { break }
+      } else if start.duration(to: now) > .milliseconds(750) {
+        let pointer = CGEvent(source: nil)?.location ?? originalPointer
+        let moved = hypot(pointer.x - originalPointer.x, pointer.y - originalPointer.y) > 10
         let escaped = CGEventSource.keyState(.combinedSessionState, key: CGKeyCode(kVK_Escape))
-        if escaped || !slot.frame.insetBy(dx: -10, dy: -12).contains(pointer) || now.timeIntervalSince(start) > 3 { break }
+        if escaped || moved || start.duration(to: now) > .seconds(3) { break }
       }
     }
     return true
@@ -222,14 +237,12 @@ struct NativeMenuBarOverflow {
     }
   }
 
-  private func transientWindows(near slot: Slot) -> Set<CGWindowID> {
+  private func transientWindows(near slot: Slot, ownedBy owners: Set<pid_t>) -> Set<CGWindowID> {
     let windows = CGWindowListCopyWindowInfo([.optionOnScreenOnly, .excludeDesktopElements], kCGNullWindowID)
       as? [[String: Any]] ?? []
-    var agentPID: pid_t = 0
-    AXUIElementGetPid(agent, &agentPID)
     return Set(windows.compactMap { window in
       guard let owner = window[kCGWindowOwnerPID as String] as? pid_t,
-        owner == slot.item.pid || owner == agentPID,
+        owners.contains(owner),
         let level = window[kCGWindowLayer as String] as? Int,
         level > 0,
         let bounds = window[kCGWindowBounds as String] as? NSDictionary,
