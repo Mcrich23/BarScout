@@ -6,6 +6,7 @@ import Foundation
 struct NativeMenuBarOverflow {
   var agent: AXUIElement
   var display: CGRect
+  private let agentPID: pid_t
   private let originalPointer: CGPoint
 
   private struct Control {
@@ -22,6 +23,7 @@ struct NativeMenuBarOverflow {
   init?(agentPID: pid_t, at point: CGPoint) {
     guard let display = Self.displayBounds(at: point) else { return nil }
     self.display = display
+    self.agentPID = agentPID
     originalPointer = point
     agent = AXUIElementCreateApplication(agentPID)
     AXUIElementSetMessagingTimeout(agent, 0.15)
@@ -74,6 +76,7 @@ struct NativeMenuBarOverflow {
     if let exact = slots.first(where: { $0.item.id == item.id || CFEqual($0.item.element, item.element) }) {
       return exact
     }
+    guard item.pid != agentPID else { return nil }
     let matches = slots.filter { $0.item.pid == item.pid }
     return matches.count == 1 ? matches.first : nil
   }
@@ -94,7 +97,7 @@ struct NativeMenuBarOverflow {
         }
         if let expanded = Self.overflowState(node.element), let frame
         {
-          if let hit = element(at: frame.center),
+          if let hit = MenuBarCatalog.element(at: frame.center),
             let liveState = Self.overflowState(hit)
           {
             return Control(element: hit, frame: MenuBarCatalog.frame(of: hit) ?? frame, expanded: liveState)
@@ -169,7 +172,7 @@ struct NativeMenuBarOverflow {
   private func slot(for item: MenuBarItem) -> Slot? {
     guard let frame = MenuBarCatalog.frame(of: item.element),
       belongsToBar(frame), frame.width > 2,
-      isHit(item.element, at: frame.center)
+      MenuBarCatalog.isHit(item.element, at: frame.center)
     else { return nil }
     return Slot(item: item, frame: frame)
   }
@@ -177,24 +180,6 @@ struct NativeMenuBarOverflow {
   private func belongsToBar(_ frame: CGRect) -> Bool {
     display.minX <= frame.midX && frame.midX < display.maxX
       && display.minY <= frame.midY && frame.midY < display.minY + 55
-  }
-
-  private func element(at point: CGPoint) -> AXUIElement? {
-    var hit: AXUIElement?
-    guard AXUIElementCopyElementAtPosition(
-      AXUIElementCreateSystemWide(), Float(point.x), Float(point.y), &hit
-    ) == .success else { return nil }
-    return hit
-  }
-
-  private func isHit(_ target: AXUIElement, at point: CGPoint) -> Bool {
-    var hit = element(at: point)
-    for _ in 0..<5 {
-      guard let current = hit else { return false }
-      if CFEqual(current, target) { return true }
-      hit = MenuBarCatalog.elementAttribute(current, kAXParentAttribute)
-    }
-    return false
   }
 
   private func openAndWait(_ slot: Slot, onPresentation: () -> Void) -> Bool {
