@@ -1,7 +1,7 @@
 import AppKit
 
 final class PaletteGlassView: NSView {
-  private static let shadowInset: CGFloat = 18
+  private static let shadowInset: CGFloat = 28
   private static let cornerRadius: CGFloat = 24
   private let glass: NSGlassEffectView
 
@@ -28,12 +28,19 @@ final class PaletteGlassView: NSView {
 
     let radius = Self.cornerRadius
     let outline = CGPath(roundedRect: glass.frame, cornerWidth: radius, cornerHeight: radius, transform: nil)
+    // Leave room for the clear pass to remove the shadow source's antialiased edge.
+    let shadowSource = CGPath(
+      roundedRect: glass.frame.insetBy(dx: 1, dy: 1),
+      cornerWidth: radius - 1,
+      cornerHeight: radius - 1,
+      transform: nil
+    )
 
     context.saveGState()
     context.beginTransparencyLayer(auxiliaryInfo: nil)
-    context.setShadow(offset: CGSize(width: 0, height: -3), blur: 7, color: NSColor.black.withAlphaComponent(0.24).cgColor)
+    context.setShadow(offset: CGSize(width: 0, height: -9), blur: 11, color: NSColor.black.withAlphaComponent(0.18).cgColor)
     context.setFillColor(NSColor.black.cgColor)
-    context.addPath(outline)
+    context.addPath(shadowSource)
     context.fillPath()
 
     context.setShadow(offset: .zero, blur: 0, color: nil)
