@@ -182,18 +182,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     panel.title = "BarScout"
     panel.isOpaque = false
     panel.backgroundColor = .clear
-    panel.hasShadow = true
+    panel.hasShadow = false
     panel.level = .floating
     panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
     panel.delegate = self
 
-    panel.contentView = NSHostingView(rootView: ContentView(
+    let glass = NSGlassEffectView(frame: NSRect(origin: .zero, size: ContentView.windowSize))
+    glass.cornerRadius = 24
+    glass.style = .regular
+    glass.contentView = NSHostingView(rootView: ContentView(
       model: model,
       shortcuts: shortcuts,
       open: { [weak self] item in self?.open(item) },
       showSettings: { [weak self] in self?.showSettings() },
       quit: { NSApp.terminate(nil) }
     ))
+    panel.contentView = glass
     panel.handleKey = { [weak self] key in
       guard let self else { return false }
       switch Int(key) {

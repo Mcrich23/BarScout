@@ -45,9 +45,9 @@ struct ContentView: View {
       }
       .padding(.bottom, 7)
 
-      Divider().padding(.horizontal, 14)
+      Divider().opacity(0.55).padding(.horizontal, 17)
       content.frame(maxWidth: .infinity, maxHeight: .infinity)
-      Divider().padding(.horizontal, 14)
+      Divider().opacity(0.55).padding(.horizontal, 17)
 
       HStack(spacing: 14) {
         if let error = model.error {
@@ -70,6 +70,7 @@ struct ContentView: View {
             .keyboardShortcut("q", modifiers: .command)
         }
         .labelStyle(.iconOnly)
+        .buttonStyle(.borderless)
         .controlSize(.small)
         .fixedSize()
       }
@@ -79,12 +80,6 @@ struct ContentView: View {
       .frame(height: 42)
     }
     .frame(width: Self.windowSize.width, height: Self.windowSize.height)
-    .background(.regularMaterial, in: .rect(cornerRadius: 23))
-    .overlay {
-      RoundedRectangle(cornerRadius: 23)
-        .strokeBorder(.primary.opacity(0.12), lineWidth: 1)
-        .allowsHitTesting(false)
-    }
     .onChange(of: model.session, initial: true) {
       searchFocused = true
     }
