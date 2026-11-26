@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct ContentView: View {
+  static let windowSize = CGSize(width: 620, height: 360)
+
   @Bindable var model: PaletteModel
   var shortcuts: ShortcutSettings
   var open: (MenuBarItem) -> Void
@@ -10,24 +12,38 @@ struct ContentView: View {
 
   var body: some View {
     VStack(spacing: 0) {
-      HStack(spacing: 15) {
-        Image(systemName: "magnifyingglass")
-          .font(.system(size: 23, weight: .medium))
-          .foregroundStyle(.tint)
+      VStack(spacing: 0) {
+        Capsule()
+          .fill(.secondary.opacity(0.32))
+          .frame(width: 30, height: 3)
+          .frame(maxWidth: .infinity)
+          .frame(height: 18)
+          .overlay { PaletteDragArea() }
           .accessibilityHidden(true)
+          .help("Drag to move the search window")
 
-        TextField("Search the menu bar…", text: $model.query)
-          .textFieldStyle(.plain)
-          .font(.system(size: 25, weight: .medium))
-          .focused($searchFocused)
-          .accessibilityLabel("Search menu bar items")
+        HStack(spacing: 13) {
+          Image(systemName: "magnifyingglass")
+            .font(.system(size: 23, weight: .medium))
+            .foregroundStyle(.secondary)
+            .frame(width: 27)
+            .overlay { PaletteDragArea() }
+            .accessibilityHidden(true)
 
-        if shortcuts.isRegistered {
-          KeyCap(value: shortcuts.shortcut.displayName, label: LocalizedStringKey(shortcuts.shortcut.displayName))
+          TextField("Search the menu bar…", text: $model.query)
+            .textFieldStyle(.plain)
+            .font(.system(size: 27))
+            .focused($searchFocused)
+            .accessibilityLabel("Search menu bar items")
+
+          if shortcuts.isRegistered && !model.hasSearchQuery {
+            KeyCap(value: shortcuts.shortcut.displayName, label: LocalizedStringKey(shortcuts.shortcut.displayName))
+          }
         }
+        .padding(.horizontal, 21)
+        .frame(height: 48)
       }
-      .padding(.horizontal, 22)
-      .frame(height: 74)
+      .padding(.bottom, 7)
 
       Divider().padding(.horizontal, 14)
       content.frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -38,15 +54,12 @@ struct ContentView: View {
           Text(error).foregroundStyle(.red)
         } else if !shortcuts.isRegistered {
           Text("Shortcut unavailable")
-        } else {
-          Text("BarScout").fontWeight(.semibold)
-        }
-        Spacer()
-        if !model.results.isEmpty {
-          hint("↑ ↓", label: "Move", keyLabel: "Up and Down")
+        } else if !model.results.isEmpty {
+          hint("↑ ↓", label: "Select", keyLabel: "Up and Down")
           hint("↵", label: "Open", keyLabel: "Return")
         }
-        hint("esc", label: "Close", keyLabel: "Escape")
+
+        Spacer()
 
         HStack(spacing: 4) {
           Button("Settings…", systemImage: "gearshape", action: showSettings)
@@ -58,16 +71,17 @@ struct ContentView: View {
         }
         .labelStyle(.iconOnly)
         .controlSize(.small)
+        .fixedSize()
       }
       .font(.system(size: 11))
       .foregroundStyle(.secondary)
-      .padding(.horizontal, 20)
-      .frame(height: 46)
+      .padding(.horizontal, 17)
+      .frame(height: 42)
     }
-    .frame(width: 590, height: 388)
-    .background(.regularMaterial, in: .rect(cornerRadius: 25))
+    .frame(width: Self.windowSize.width, height: Self.windowSize.height)
+    .background(.regularMaterial, in: .rect(cornerRadius: 23))
     .overlay {
-      RoundedRectangle(cornerRadius: 25)
+      RoundedRectangle(cornerRadius: 23)
         .strokeBorder(.primary.opacity(0.12), lineWidth: 1)
         .allowsHitTesting(false)
     }
@@ -143,11 +157,11 @@ private struct ResultsView: View {
 
   var body: some View {
     VStack(alignment: .leading, spacing: 5) {
-      Text(model.hasSearchQuery ? "Search Results" : "Menu Bar Items")
+      Text(model.hasSearchQuery ? "Matches" : "Menu Bar Items")
         .font(.system(size: 11, weight: .semibold))
         .foregroundStyle(.secondary)
         .padding(.horizontal, 22)
-        .padding(.top, 10)
+        .padding(.top, 12)
         .accessibilityAddTraits(.isHeader)
 
       ScrollViewReader { scroll in
@@ -191,7 +205,7 @@ private struct ResultRow: View {
 
         VStack(alignment: .leading, spacing: 2) {
           Text(item.title)
-            .font(.system(size: 13, weight: .semibold))
+            .font(.system(size: 14, weight: .medium))
             .lineLimit(1)
           if item.appName != item.title {
             Text(item.appName)
@@ -214,7 +228,7 @@ private struct ResultRow: View {
       .background {
         if selected {
           RoundedRectangle(cornerRadius: 9)
-            .fill(.tint.opacity(contrast == .increased ? 0.36 : 0.20))
+            .fill(.tint.opacity(contrast == .increased ? 0.36 : 0.18))
         }
       }
     }

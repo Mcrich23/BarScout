@@ -168,21 +168,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
   private func presentPalette() {
     let panel = panel ?? makePanel()
-    let mouse = NSEvent.mouseLocation
-    if let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main {
-      let area = screen.visibleFrame
-      panel.setFrameOrigin(NSPoint(
-        x: area.midX - panel.frame.width / 2,
-        y: area.maxY - min(150, area.height * 0.16) - panel.frame.height
-      ))
-    }
     panel.makeKeyAndOrderFront(nil)
     model.isPresented = true
   }
 
   private func makePanel() -> SearchPanel {
     let panel = SearchPanel(
-      contentRect: NSRect(x: 0, y: 0, width: 590, height: 388),
+      contentRect: NSRect(origin: .zero, size: ContentView.windowSize),
       styleMask: [.borderless, .nonactivatingPanel],
       backing: .buffered,
       defer: false
@@ -219,6 +211,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
       }
       return true
     }
+    let frameName = "SearchPalette"
+    if !panel.setFrameUsingName(frameName) {
+      let mouse = NSEvent.mouseLocation
+      if let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main {
+        let area = screen.visibleFrame
+        panel.setFrameOrigin(NSPoint(
+          x: area.midX - panel.frame.width / 2,
+          y: area.maxY - min(150, area.height * 0.16) - panel.frame.height
+        ))
+      }
+    }
+    panel.setFrameAutosaveName(frameName)
     self.panel = panel
     return panel
   }
