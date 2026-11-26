@@ -8,4 +8,10 @@ struct MenuBarItem: Identifiable {
   var icon: NSImage?
   var element: AXUIElement
   var pid: pid_t
+  var systemIcon: SystemMenuBarIcon? = nil
+}
+
+enum SystemMenuBarIcon {
+  case symbol(String)
+  case bluetooth
 }

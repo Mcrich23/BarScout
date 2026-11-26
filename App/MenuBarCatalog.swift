@@ -65,12 +65,19 @@ enum MenuBarCatalog {
     var items: [MenuBarItem] = []
     var pending = [(slot, 0)]
     while let (element, depth) = pending.popLast() {
-      switch attribute(element, kAXRoleAttribute) as? String {
-      case kAXMenuBarItemRole:
-        guard let title = label(of: element) else { continue }
+      let role = attribute(element, kAXRoleAttribute) as? String
+      switch role {
+      case kAXMenuBarItemRole, kAXButtonRole:
         let identifier = attribute(element, kAXIdentifierAttribute) as? String
+        let control = systemControl(for: identifier)
+        guard role == kAXMenuBarItemRole || control != nil,
+          let title = label(of: element) ?? control?.title
+        else { continue }
         let key = identifier.flatMap { $0.isEmpty ? nil : $0 } ?? title
-        items.append(MenuBarItem(id: "\(pid):\(key):0", title: title, appName: title, icon: nil, element: element, pid: pid))
+        items.append(MenuBarItem(
+          id: "\(pid):\(key):0", title: title, appName: title, icon: nil,
+          element: element, pid: pid, systemIcon: control?.icon
+        ))
       case kAXGroupRole where depth < 5:
         let descendants = depth == 0 ? children : self.children(of: element)
         pending.append(contentsOf: descendants.map { ($0, depth + 1) })
@@ -79,6 +86,28 @@ enum MenuBarCatalog {
       }
     }
     return items
+  }
+
+  private static func systemControl(for identifier: String?) -> (title: String, icon: SystemMenuBarIcon)? {
+    switch identifier?.lowercased() {
+    case "com.apple.menuextra.accessibility-shortcuts": (String(localized: "Accessibility Shortcuts"), .symbol("accessibility"))
+    case "com.apple.menuextra.battery": (String(localized: "Battery"), .symbol("battery.100percent"))
+    case "com.apple.menuextra.bluetooth": (String(localized: "Bluetooth"), .bluetooth)
+    case "com.apple.menuextra.clock": (String(localized: "Clock"), .symbol("clock"))
+    case "com.apple.menuextra.controlcenter": (String(localized: "Control Center"), .symbol("switch.2"))
+    case "com.apple.menuextra.display": (String(localized: "Display"), .symbol("display"))
+    case "com.apple.menuextra.focusmode": (String(localized: "Focus"), .symbol("moon"))
+    case "com.apple.menuextra.hearing": (String(localized: "Hearing"), .symbol("ear"))
+    case "com.apple.menuextra.now-playing": (String(localized: "Now Playing"), .symbol("play.circle"))
+    case "com.apple.menuextra.screen-mirroring": (String(localized: "Screen Mirroring"), .symbol("rectangle.on.rectangle"))
+    case "com.apple.menuextra.sound": (String(localized: "Sound"), .symbol("speaker.wave.2"))
+    case "com.apple.menuextra.timemachine":
+      (String(localized: "Time Machine"), .symbol("clock.arrow.trianglehead.counterclockwise.rotate.90"))
+    case "com.apple.menuextra.user": (String(localized: "Fast User Switching"), .symbol("person.crop.circle"))
+    case "com.apple.menuextra.vpn": (String(localized: "VPN"), .symbol("lock.shield"))
+    case "com.apple.menuextra.wifi": (String(localized: "Wi-Fi"), .symbol("wifi"))
+    default: nil
+    }
   }
 
   private static func appItems(_ app: NSRunningApplication) -> [MenuBarItem] {
@@ -105,10 +134,14 @@ enum MenuBarCatalog {
         }
       }
 
-      let title = label(of: element) ?? (children.count == 1 ? appName : String(localized: "\(appName) item \(index + 1)"))
+      let control = app.bundleIdentifier?.hasPrefix("com.apple.") == true
+        ? systemControl(for: attribute(element, kAXIdentifierAttribute) as? String)
+        : nil
+      let title = label(of: element) ?? control?.title
+        ?? (children.count == 1 ? appName : String(localized: "\(appName) item \(index + 1)"))
       return MenuBarItem(
         id: itemID(element, children: children, pid: app.processIdentifier, index: index),
-        title: title, appName: appName, icon: icon, element: element, pid: app.processIdentifier
+        title: title, appName: appName, icon: icon, element: element, pid: app.processIdentifier, systemIcon: control?.icon
       )
     }
   }

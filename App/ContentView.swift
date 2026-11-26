@@ -188,7 +188,18 @@ private struct ResultRow: View {
     Button(action: open) {
       HStack(spacing: 11) {
         Group {
-          if let icon = item.icon {
+          if let systemIcon = item.systemIcon {
+            switch systemIcon {
+            case .symbol(let symbol):
+              Image(systemName: symbol)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundStyle(.tint)
+            case .bluetooth:
+              BluetoothGlyph()
+                .stroke(.tint, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round))
+                .frame(width: 16, height: 16)
+            }
+          } else if let icon = item.icon {
             Image(nsImage: icon).resizable().scaledToFit()
           } else {
             Image(systemName: "line.3.horizontal.decrease.circle")
@@ -229,6 +240,22 @@ private struct ResultRow: View {
     }
     .buttonStyle(.plain)
     .accessibilityAddTraits(selected ? .isSelected : [])
+  }
+}
+
+private struct BluetoothGlyph: Shape {
+  func path(in rect: CGRect) -> Path {
+    let center = rect.midX
+    let left = rect.minX + rect.width * 0.22
+    let right = rect.maxX - rect.width * 0.22
+    return Path { path in
+      path.move(to: CGPoint(x: left, y: rect.minY + rect.height * 0.24))
+      path.addLine(to: CGPoint(x: right, y: rect.minY + rect.height * 0.73))
+      path.addLine(to: CGPoint(x: center, y: rect.maxY))
+      path.addLine(to: CGPoint(x: center, y: rect.minY))
+      path.addLine(to: CGPoint(x: right, y: rect.minY + rect.height * 0.27))
+      path.addLine(to: CGPoint(x: left, y: rect.minY + rect.height * 0.76))
+    }
   }
 }
 
