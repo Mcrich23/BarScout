@@ -173,8 +173,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
   }
 
   private func makePanel() -> SearchPanel {
+    let hosting = NSHostingView(rootView: ContentView(
+      model: model,
+      shortcuts: shortcuts,
+      open: { [weak self] item in self?.open(item) },
+      showSettings: { [weak self] in self?.showSettings() },
+      quit: { NSApp.terminate(nil) }
+    ))
+    let content = PaletteGlassView(content: hosting, size: ContentView.windowSize)
+    let panelSize = content.frame.size
     let panel = SearchPanel(
-      contentRect: NSRect(origin: .zero, size: ContentView.windowSize),
+      contentRect: NSRect(origin: .zero, size: panelSize),
       styleMask: [.borderless, .nonactivatingPanel],
       backing: .buffered,
       defer: false
@@ -186,18 +195,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     panel.level = .floating
     panel.collectionBehavior = [.moveToActiveSpace, .fullScreenAuxiliary]
     panel.delegate = self
-
-    let glass = NSGlassEffectView(frame: NSRect(origin: .zero, size: ContentView.windowSize))
-    glass.cornerRadius = 24
-    glass.style = .regular
-    glass.contentView = NSHostingView(rootView: ContentView(
-      model: model,
-      shortcuts: shortcuts,
-      open: { [weak self] item in self?.open(item) },
-      showSettings: { [weak self] in self?.showSettings() },
-      quit: { NSApp.terminate(nil) }
-    ))
-    panel.contentView = glass
+    panel.contentView = content
     panel.handleKey = { [weak self] key in
       guard let self else { return false }
       switch Int(key) {
@@ -216,7 +214,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
       return true
     }
     let frameName = "SearchPalette"
-    if !panel.setFrameUsingName(frameName) {
+    if panel.setFrameUsingName(frameName) {
+      let saved = panel.frame
+      if saved.size != panelSize {
+        panel.setFrame(NSRect(
+          x: saved.midX - panelSize.width / 2,
+          y: saved.midY - panelSize.height / 2,
+          width: panelSize.width,
+          height: panelSize.height
+        ), display: false)
+      }
+    } else {
       let mouse = NSEvent.mouseLocation
       if let screen = NSScreen.screens.first(where: { $0.frame.contains(mouse) }) ?? NSScreen.main {
         let area = screen.visibleFrame
