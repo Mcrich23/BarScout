@@ -158,7 +158,7 @@ struct NativeMenuBarOverflow {
 
     // AX hit testing can report the hosting slot or window instead of the
     // button. Its live frame from MenuBarAgent already identifies the target.
-    guard click(current.frame.center) else { return false }
+    guard click(current.frame.center, isOverflowControl: true) else { return false }
     return waitForExpansion(expanded)
   }
 
@@ -193,21 +193,11 @@ struct NativeMenuBarOverflow {
     let baseline = transientWindows(near: slot, ownedBy: owners)
     let menuWasVisible = hasOpenMenu(slot.item)
     guard slot.frame == self.slot(for: slot.item)?.frame, click(slot.frame.center) else { return false }
+    restorePointer()
 
     let clock = ContinuousClock()
     let start = clock.now
     var lastOpen: ContinuousClock.Instant?
-    // Window Server can report the popover while the app's accessibility server is busy handling the click.
-    while true {
-      if !transientWindows(near: slot, ownedBy: owners).isSubset(of: baseline) {
-        lastOpen = clock.now
-        break
-      }
-      if start.duration(to: clock.now) >= .milliseconds(150) { break }
-      Thread.sleep(forTimeInterval: 0.015)
-    }
-    restorePointer()
-
     while true {
       Thread.sleep(forTimeInterval: 0.09)
       let open = !transientWindows(near: slot, ownedBy: owners).isSubset(of: baseline)
@@ -255,16 +245,16 @@ struct NativeMenuBarOverflow {
     })
   }
 
-  private func click(_ point: CGPoint) -> Bool {
+  private func click(_ point: CGPoint, isOverflowControl: Bool = false) -> Bool {
     guard let down = event(.leftMouseDown, at: point),
       let up = event(.leftMouseUp, at: point)
     else { return false }
     down.setIntegerValueField(.mouseEventClickState, value: 1)
     up.setIntegerValueField(.mouseEventClickState, value: 1)
     event(.mouseMoved, at: point)?.post(tap: .cghidEventTap)
-    Thread.sleep(forTimeInterval: 0.025)
+    Thread.sleep(forTimeInterval: isOverflowControl ? 0.025 : 0.005)
     down.post(tap: .cghidEventTap)
-    Thread.sleep(forTimeInterval: 0.035)
+    Thread.sleep(forTimeInterval: isOverflowControl ? 0.035 : 0.010)
     up.post(tap: .cghidEventTap)
     return true
   }
